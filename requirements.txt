@@ -1,0 +1,26 @@
+# ─── Web Framework ───────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# ─── ML / NLP ────────────────────────────────────────────────────────────────
+transformers==4.47.1
+torch==2.5.1
+tokenizers==0.21.0
+huggingface-hub==0.27.0
+accelerate==1.2.1          # enables GPU acceleration & optimised CPU inference
+
+# ─── Data & Validation ───────────────────────────────────────────────────────
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# ─── HTTP / Async ────────────────────────────────────────────────────────────
+httpx==0.28.1
+
+# ─── Testing ─────────────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-asyncio==0.25.2
+
+# ─── Utilities ───────────────────────────────────────────────────────────────
+tenacity==9.0.0            # retry logic for model loading
+rich==13.9.4               # pretty console output

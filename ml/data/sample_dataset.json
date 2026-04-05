@@ -1,0 +1,10 @@
+[
+  {
+    "text": "Those immigrants are taking all of our jobs.",
+    "labels": ["xenophobic"]
+  },
+  {
+    "text": "Old people shouldn't be allowed to use computers, they are too slow.",
+    "labels": ["ageist"]
+  }
+]
