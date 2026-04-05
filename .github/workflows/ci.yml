@@ -63,3 +63,28 @@ jobs:
           # Expose GitHub Actions cache to Docker Buildx for faster builds
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Local Machine
+    needs: test-and-build
+    # Only run deployment when we are pushing to main, not on pull requests
+    if: github.event_name != 'pull_request'
+    # This targets your machine which you registered as a GitHub self-hosted runner!
+    runs-on: self-hosted
+    
+    steps:
+      - name: Pull latest image
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/narrative-bias-api:latest
+            
+      - name: Stop existing container
+        run: |
+          docker stop bias-api || true
+          docker rm bias-api || true
+          
+      - name: Run new container
+        run: |
+          docker run -d \
+            --name bias-api \
+            -p 8000:8000 \
+            --restart unless-stopped \
+            ${{ secrets.DOCKERHUB_USERNAME }}/narrative-bias-api:latest
