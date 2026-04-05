@@ -71,23 +71,16 @@ jobs:
     if: github.event_name != 'pull_request'
     # This targets your machine which you registered as a GitHub self-hosted runner!
     runs-on: self-hosted
-    defaults:
-      run:
-        shell: bash
     
     steps:
       - name: Pull latest image
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/narrative-bias-api:latest
             
       - name: Stop existing container
+        continue-on-error: true
         run: |
-          docker stop bias-api || true
-          docker rm bias-api || true
+          docker stop bias-api
+          docker rm bias-api
           
       - name: Run new container
-        run: |
-          docker run -d \
-            --name bias-api \
-            -p 8000:8000 \
-            --restart unless-stopped \
-            ${{ secrets.DOCKERHUB_USERNAME }}/narrative-bias-api:latest
+        run: docker run -d --name bias-api -p 8000:8000 --restart unless-stopped ${{ secrets.DOCKERHUB_USERNAME }}/narrative-bias-api:latest
