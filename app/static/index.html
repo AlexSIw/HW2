@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narrative Bias Detector</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2c2c54);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 2rem;
+            color: #e0e0ff;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #b0b0d0;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            color: #fff;
+            font-size: 1rem;
+            resize: none;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bias-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .bias-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .bias-label {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .bias-score {
+            color: #a29bfe;
+        }
+        
+        .loading {
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+            color: #a29bfe;
+        }
+        
+        .error {
+            color: #ff7675;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Narrative Bias Detector</h1>
+        <p class="subtitle">Enter a sentence to analyze its underlying bias.</p>
+
+        <div class="input-group">
+            <textarea id="text-input" placeholder="Type your sentence here... (e.g. Those immigrants are taking all of our jobs)"></textarea>
+        </div>
+
+        <button onclick="analyzeText()" id="analyze-btn">Analyze Bias</button>
+
+        <div class="loading" id="loading">Analyzing... please wait.</div>
+        <div class="error" id="error">An error occurred. Please try again.</div>
+
+        <div class="result-container" id="result">
+            <h3>Detection Results</h3>
+            <div style="margin-top: 15px;" id="bias-list">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeText() {
+            const textInput = document.getElementById('text-input').value.trim();
+            if (!textInput) return;
+
+            const btn = document.getElementById('analyze-btn');
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const biasList = document.getElementById('bias-list');
+
+            // Reset UI
+            resultDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            loading.style.display = 'block';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: textInput,
+                        threshold: 0.1
+                    })
+                });
+
+                if (!response.ok) throw new Error('API processing failed');
+                
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                biasList.innerHTML = '';
+
+                // Add dominant bias and scores
+                if (data.dominant_bias) {
+                    const topItem = document.createElement('div');
+                    topItem.className = 'bias-item';
+                    topItem.style.background = 'rgba(108, 92, 231, 0.2)';
+                    topItem.style.border = '1px solid rgba(108, 92, 231, 0.4)';
+                    
+                    const score = (data.scores[data.dominant_bias] * 100).toFixed(1);
+                    topItem.innerHTML = `
+                        <span class="bias-label" style="color: #a29bfe">Dominant: ${data.dominant_bias}</span>
+                        <span class="bias-score">${score}%</span>
+                    `;
+                    biasList.appendChild(topItem);
+                } else {
+                    biasList.innerHTML = '<p style="text-align: center; color: #a29bfe">No significant bias detected.</p>';
+                }
+
+                // Add other scores (optional, maybe top 3)
+                let count = 0;
+                for (const [bias, score] of Object.entries(data.scores)) {
+                    if (bias !== data.dominant_bias && count < 2) {
+                        const item = document.createElement('div');
+                        item.className = 'bias-item';
+                        item.innerHTML = `
+                            <span class="bias-label">${bias}</span>
+                            <span class="bias-score">${(score * 100).toFixed(1)}%</span>
+                        `;
+                        biasList.appendChild(item);
+                        count++;
+                    }
+                }
+
+                resultDiv.style.display = 'block';
+
+            } catch (err) {
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    </script>
+</body>
+</html>
