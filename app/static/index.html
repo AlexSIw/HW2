@@ -210,31 +210,33 @@
                 biasList.innerHTML = '';
 
                 // Add dominant bias and scores
-                if (data.dominant_bias) {
+                if (data.dominant_narrative) {
                     const topItem = document.createElement('div');
                     topItem.className = 'bias-item';
                     topItem.style.background = 'rgba(108, 92, 231, 0.2)';
                     topItem.style.border = '1px solid rgba(108, 92, 231, 0.4)';
                     
-                    const score = (data.scores[data.dominant_bias] * 100).toFixed(1);
+                    const domLabelInfo = data.labels.find(l => l.label === data.dominant_narrative);
+                    const score = domLabelInfo ? (domLabelInfo.score * 100).toFixed(1) : 0;
+                    
                     topItem.innerHTML = `
-                        <span class="bias-label" style="color: #a29bfe">Dominant: ${data.dominant_bias}</span>
+                        <span class="bias-label" style="color: #a29bfe">Dominant: ${data.dominant_narrative}</span>
                         <span class="bias-score">${score}%</span>
                     `;
                     biasList.appendChild(topItem);
-                } else {
+                } else if (!data.is_biased) {
                     biasList.innerHTML = '<p style="text-align: center; color: #a29bfe">No significant bias detected.</p>';
                 }
 
                 // Add other scores (optional, maybe top 3)
                 let count = 0;
-                for (const [bias, score] of Object.entries(data.scores)) {
-                    if (bias !== data.dominant_bias && count < 2) {
+                for (const labelData of data.labels) {
+                    if (labelData.label !== data.dominant_narrative && count < 2) {
                         const item = document.createElement('div');
                         item.className = 'bias-item';
                         item.innerHTML = `
-                            <span class="bias-label">${bias}</span>
-                            <span class="bias-score">${(score * 100).toFixed(1)}%</span>
+                            <span class="bias-label">${labelData.label}</span>
+                            <span class="bias-score">${(labelData.score * 100).toFixed(1)}%</span>
                         `;
                         biasList.appendChild(item);
                         count++;
