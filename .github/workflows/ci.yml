@@ -25,6 +25,16 @@ jobs:
           # Uses docker-container driver to support layer caching
           driver: docker-container
 
+      - name: Debug Docker Credentials
+        run: |
+          echo "Username begins with: '${USERNAME:0:1}'"
+          echo "Username ends with: '${USERNAME: -1}'"
+          echo "Username length: ${#USERNAME}"
+          echo "Token length: ${#TOKEN}"
+        env:
+          USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Log in to Docker Hub
         # Only login if it's a push to main (don't push on PRs)
         if: github.event_name != 'pull_request'
